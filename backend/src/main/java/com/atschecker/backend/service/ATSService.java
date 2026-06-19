@@ -1,7 +1,6 @@
 package com.atschecker.backend.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,8 +43,11 @@ public class ATSService {
                 best = Math.max(best, sim);
             }
 
-            if (best > 0.6) matched.add(jdPhrases.get(i));
-            else missing.add(jdPhrases.get(i));
+            if (best > 0.78) {
+                matched.add(jdPhrases.get(i));
+            } else {
+                missing.add(jdPhrases.get(i));
+            }
         }
 
         int score = jdPhrases.isEmpty()
@@ -59,15 +61,69 @@ public class ATSService {
         );
     }
 
+    // -CLEAN PHRASE ----
     private List<String> extractPhrases(String text) {
 
-        return Arrays.stream(text.toLowerCase()
-                        .replaceAll("[^a-z0-9 ]", " ")
-                        .split("\\s+"))
-                .filter(w -> w.length() > 3)
+        if (text == null || text.isBlank()) return List.of();
+
+        text = text.toLowerCase()
+                .replaceAll("[^a-z0-9+.#/\\-\\s]", " ");
+
+        String[] words = text.split("\\s+");
+
+        List<String> phrases = new ArrayList<>();
+
+       
+        for (String w : words) {
+            if (isTechnicalToken(w)) {
+                phrases.add(w);
+            }
+        }
+
+        for (int i = 0; i < words.length - 1; i++) {
+
+            String w1 = words[i];
+            String w2 = words[i + 1];
+
+            if (isTechnicalToken(w1) && isTechnicalToken(w2)) {
+                String phrase = w1 + " " + w2;
+                phrases.add(phrase);
+            }
+        }
+
+        return phrases.stream()
+                .distinct()
                 .collect(Collectors.toList());
     }
 
+    
+    private boolean isTechnicalToken(String w) {
+
+        if (w == null || w.length() < 3) return false;
+
+        return w.contains("java") ||
+                w.contains("spring") ||
+                w.contains("node") ||
+                w.contains("react") ||
+                w.contains("angular") ||
+                w.contains("aws") ||
+                w.contains("azure") ||
+                w.contains("docker") ||
+                w.contains("kubernetes") ||
+                w.contains("sql") ||
+                w.contains("api") ||
+                w.contains("ci") ||
+                w.contains("cd") ||
+                w.contains("github") ||
+                w.contains("microservice") ||
+                w.contains("rest") ||
+                w.contains("cloud") ||
+                w.contains("testing") ||
+                w.contains("jenkins") ||
+                w.contains("devops");
+    }
+
+  
     private double cosine(List<Double> a, List<Double> b) {
 
         double dot = 0, magA = 0, magB = 0;

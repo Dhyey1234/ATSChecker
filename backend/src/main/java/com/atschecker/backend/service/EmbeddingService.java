@@ -17,16 +17,16 @@ public class EmbeddingService {
         try {
             String url = "http://localhost:8000/embed";
 
-            Map<String, Object> request = new HashMap<>();
-            request.put("texts", texts);
+            Map<String, Object> req = new HashMap<>();
+            req.put("texts", texts);
 
-            Map response = restTemplate.postForObject(url, request, Map.class);
+            Map res = restTemplate.postForObject(url, req, Map.class);
 
-            if (response == null || response.get("vectors") == null) {
+            if (res == null || res.get("vectors") == null) {
                 return List.of();
             }
 
-            return (List<List<Double>>) response.get("vectors");
+            return (List<List<Double>>) res.get("vectors");
 
         } catch (Exception e) {
             return List.of();
