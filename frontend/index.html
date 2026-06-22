@@ -33,9 +33,11 @@ async function analyze() {
     try {
         const res = await fetch("http://localhost:8080/api/ats/analyze", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
-                jd: jd,
+                jobDescription: jd,
                 resume: resume
             })
         });
@@ -44,12 +46,12 @@ async function analyze() {
 
         if (!res.ok) {
             document.getElementById("output").innerHTML =
-                "<p style='color:red;'>Error: Backend failed</p>";
+                "<p style='color:red;'>Error: " + (data.message || "Backend failed") + "</p>";
             return;
         }
 
-        const matched = data.matchedKeywords || [];
-        const missing = data.missingKeywords || [];
+        const matched = data.matched || [];
+        const missing = data.missing || [];
         const suggestions = data.suggestions || [];
 
         document.getElementById("output").innerHTML = `
@@ -61,12 +63,14 @@ async function analyze() {
             <h4>Missing</h4>
             <p>${missing.join(", ")}</p>
 
-            
+            <h4>Suggestions</h4>
+            <p>${suggestions.join("<br>")}</p>
         `;
 
     } catch (error) {
         document.getElementById("output").innerHTML =
             "<p style='color:red;'>Connection error. Backend not running.</p>";
+        console.error(error);
     }
 }
 </script>

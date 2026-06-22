@@ -1,14 +1,13 @@
 package com.atschecker.backend.controller;
 
-import java.util.List;
-import java.util.Map;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.atschecker.backend.model.ATSRequest;
 import com.atschecker.backend.model.ScoreResult;
 import com.atschecker.backend.service.ATSService;
 
@@ -24,15 +23,28 @@ public class ATSController {
     }
 
     @PostMapping("/analyze")
-    public ScoreResult analyze(@RequestBody Map<String, String> request) {
+    public ResponseEntity<ScoreResult> analyze(@RequestBody ATSRequest request) {
 
-        String jd = request.get("jd");
-        String resume = request.get("resume");
+        // Basic validation (prevents silent null crashes downstream)
+        if (request == null ||
+            request.getJobDescription() == null ||
+            request.getResume() == null) {
 
-        if (jd == null || resume == null) {
-            return new ScoreResult(0, List.of(), List.of());
+            return ResponseEntity.badRequest()
+                    .body(new ScoreResult(
+                            0,
+                            java.util.List.of(),
+                            java.util.List.of(),
+                            java.util.Map.of(),
+                            java.util.List.of("Invalid input: Resume or Job Description is missing")
+                    ));
         }
 
-        return atsService.analyze(jd, resume);
+        ScoreResult result = atsService.analyze(
+                request.getJobDescription(),
+                request.getResume()
+        );
+
+        return ResponseEntity.ok(result);
     }
 }
